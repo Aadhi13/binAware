@@ -18,8 +18,10 @@ connection.once('open', () => {
 })
 
 const helloRouter = require('./routes/helloRoute');
+const authRouter = require('./routes/authRoutes');
 
 app.use('/', helloRouter);
+app.use('/api/auth', authRouter);
 
 app.listen(port, () => {
   console.log(`Server is running on port: ${port}`);
