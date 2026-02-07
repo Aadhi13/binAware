@@ -3,8 +3,8 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Custom marker icons based on report type
-const createMarkerIcon = (color) => {
+// Custom marker icons for reports (circles)
+const createReportIcon = (color) => {
     return L.divIcon({
         className: 'custom-marker',
         html: `<div style="
@@ -21,49 +21,100 @@ const createMarkerIcon = (color) => {
     });
 };
 
-const markerColors = {
+// Custom marker icons for bins (squares with bin icon)
+const createBinIcon = (color) => {
+    return L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="
+      background-color: ${color};
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    ">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 6H5H21" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+        popupAnchor: [0, -12],
+    });
+};
+
+const reportColors = {
     'overflow': '#ef4444',      // red
     'missing-bin': '#1f2937',   // black/dark gray
     'misused-bin': '#eab308',   // yellow
     'littered-area': '#3b82f6', // blue
 };
 
-const typeLabels = {
+const binColors = {
+    'good': '#22c55e',      // green
+    'overflow': '#ef4444',  // red
+    'missing': '#6b7280',   // gray
+    'misused': '#eab308',   // yellow
+};
+
+const reportTypeLabels = {
     'overflow': 'Overflowing Bin',
     'missing-bin': 'Missing Bin',
     'misused-bin': 'Misused Bin',
     'littered-area': 'Littered Area',
 };
 
+const binStatusLabels = {
+    'good': 'Good Condition',
+    'overflow': 'Overflowing',
+    'missing': 'Missing/Removed',
+    'misused': 'Misused/Damaged',
+};
+
 function MapPage() {
     const [reports, setReports] = useState([]);
+    const [bins, setBins] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showLayer, setShowLayer] = useState('all'); // 'all', 'reports', 'bins'
 
     // Bangalore center
     const center = [12.9716, 77.5946];
 
     useEffect(() => {
-        const fetchReports = async () => {
+        const fetchData = async () => {
             try {
                 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-                const res = await fetch(`${API_BASE}/reports`);
 
-                if (!res.ok) {
-                    throw new Error('Failed to fetch reports');
-                }
+                // Fetch both reports and bins in parallel
+                const [reportsRes, binsRes] = await Promise.all([
+                    fetch(`${API_BASE}/reports`),
+                    fetch(`${API_BASE}/bins`)
+                ]);
 
-                const data = await res.json();
-                setReports(data);
+                if (!reportsRes.ok) throw new Error('Failed to fetch reports');
+                if (!binsRes.ok) throw new Error('Failed to fetch bins');
+
+                const [reportsData, binsData] = await Promise.all([
+                    reportsRes.json(),
+                    binsRes.json()
+                ]);
+
+                setReports(reportsData);
+                setBins(binsData);
             } catch (err) {
-                console.error('Fetch reports error:', err);
+                console.error('Fetch error:', err);
                 setError(err.message);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchReports();
+        fetchData();
     }, []);
 
     const formatDate = (dateString) => {
@@ -77,7 +128,7 @@ function MapPage() {
 
     return (
         <div className="relative w-full" style={{ height: 'calc(100dvh - 80px)' }}>
-            {/* Map - Full screen minus bottom nav */}
+            {/* Map */}
             <MapContainer
                 center={center}
                 zoom={13}
@@ -89,16 +140,17 @@ function MapPage() {
                     attribution='&copy; OpenStreetMap'
                 />
 
-                {reports.map((report) => (
+                {/* Report markers */}
+                {(showLayer === 'all' || showLayer === 'reports') && reports.map((report) => (
                     <Marker
-                        key={report._id}
+                        key={`report-${report._id}`}
                         position={[report.lat, report.lng]}
-                        icon={createMarkerIcon(markerColors[report.type] || '#6b7280')}
+                        icon={createReportIcon(reportColors[report.type] || '#6b7280')}
                     >
                         <Popup>
                             <div className="text-sm">
                                 <p className="font-semibold text-slate-800 mb-1">
-                                    {typeLabels[report.type] || report.type}
+                                    📋 {reportTypeLabels[report.type] || report.type}
                                 </p>
                                 {report.comment && (
                                     <p className="text-slate-600 text-xs mb-1">{report.comment}</p>
@@ -107,6 +159,24 @@ function MapPage() {
                                     <img src={report.photoUrl} alt="" className="w-full h-16 object-cover rounded mb-1" />
                                 )}
                                 <p className="text-xs text-slate-400">{formatDate(report.createdAt)}</p>
+                            </div>
+                        </Popup>
+                    </Marker>
+                ))}
+
+                {/* Bin markers */}
+                {(showLayer === 'all' || showLayer === 'bins') && bins.map((bin) => (
+                    <Marker
+                        key={`bin-${bin._id}`}
+                        position={[bin.lat, bin.lng]}
+                        icon={createBinIcon(binColors[bin.status] || '#6b7280')}
+                    >
+                        <Popup>
+                            <div className="text-sm">
+                                <p className="font-semibold text-slate-800 mb-1">
+                                    🗑️ Bin - {binStatusLabels[bin.status] || bin.status}
+                                </p>
+                                <p className="text-xs text-slate-400">Added {formatDate(bin.createdAt)}</p>
                             </div>
                         </Popup>
                     </Marker>
@@ -127,15 +197,39 @@ function MapPage() {
                 </div>
             )}
 
-            {/* Compact Legend */}
+            {/* Layer toggle */}
+            <div className="absolute top-2 right-2 bg-white rounded-lg shadow-md z-[1000] p-1">
+                <div className="flex gap-1">
+                    {['all', 'reports', 'bins'].map((layer) => (
+                        <button
+                            key={layer}
+                            onClick={() => setShowLayer(layer)}
+                            className={`px-2 py-1 text-xs rounded font-medium transition-colors capitalize
+                                ${showLayer === layer ? 'bg-civic-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
+                        >
+                            {layer}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Legend */}
             <div className="absolute bottom-2 left-2 bg-white/95 rounded-lg shadow-md px-2 py-1.5 z-[1000]">
-                <div className="flex gap-3 text-xs">
-                    {Object.entries(markerColors).map(([type, color]) => (
+                <div className="flex flex-wrap gap-3 text-xs">
+                    {/* Report legend */}
+                    {(showLayer === 'all' || showLayer === 'reports') && Object.entries(reportColors).map(([type, color]) => (
                         <div key={type} className="flex items-center gap-1">
                             <span className="w-2 h-2 rounded-full" style={{ backgroundColor: color }}></span>
-                            <span className="text-slate-600 hidden sm:inline">{typeLabels[type].split(' ')[0]}</span>
+                            <span className="text-slate-600 hidden sm:inline">{reportTypeLabels[type].split(' ')[0]}</span>
                         </div>
                     ))}
+                    {/* Bin legend */}
+                    {(showLayer === 'all' || showLayer === 'bins') && (
+                        <div className="flex items-center gap-1 border-l border-slate-200 pl-2">
+                            <span className="w-2 h-2 rounded-sm bg-green-500"></span>
+                            <span className="text-slate-600 hidden sm:inline">Bins</span>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

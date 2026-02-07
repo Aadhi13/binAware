@@ -18,7 +18,7 @@ const MapIcon = ({ active }) => (
     </svg>
 );
 
-const AddIcon = ({ active }) => (
+const ReportIcon = ({ active }) => (
     <svg
         className={`w-6 h-6 ${active ? 'text-civic-600' : 'text-slate-400'}`}
         fill="none"
@@ -29,7 +29,23 @@ const AddIcon = ({ active }) => (
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        />
+    </svg>
+);
+
+const BinIcon = ({ active }) => (
+    <svg
+        className={`w-6 h-6 ${active ? 'text-civic-600' : 'text-slate-400'}`}
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
         />
     </svg>
 );
@@ -67,7 +83,8 @@ function DashboardLayout() {
 
     const navItems = [
         { to: '/dashboard/map', label: 'Map', Icon: MapIcon },
-        { to: '/dashboard/add', label: 'Report', Icon: AddIcon },
+        { to: '/dashboard/add', label: 'Report', Icon: ReportIcon },
+        { to: '/dashboard/add-bin', label: 'Bin', Icon: BinIcon },
         { to: '/dashboard/profile', label: 'Profile', Icon: ProfileIcon },
     ];
 
@@ -78,15 +95,15 @@ function DashboardLayout() {
                 <Outlet />
             </main>
 
-            {/* Fixed bottom navigation - full width, icons centered together */}
+            {/* Fixed bottom navigation - 4 items */}
             <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg">
-                <div className="flex justify-around items-center h-20 max-w-md mx-auto">
+                <div className="flex justify-around items-center h-20 max-w-lg mx-auto">
                     {navItems.map(({ to, label, Icon }) => (
                         <NavLink
                             key={to}
                             to={to}
                             className={({ isActive }) =>
-                                `flex flex-col items-center justify-center px-4 py-2 rounded-lg transition-colors
+                                `flex flex-col items-center justify-center px-3 py-2 rounded-lg transition-colors
                 ${isActive ? 'text-civic-600' : 'text-slate-400 hover:text-slate-600'}`
                             }
                         >
