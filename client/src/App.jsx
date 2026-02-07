@@ -12,6 +12,7 @@ import VerifyOTPPage from './pages/VerifyOTPPage';
 import DashboardLayout from './layouts/DashboardLayout';
 import MapPage from './pages/MapPage';
 import AddReportPage from './pages/AddReportPage';
+import AddBinPage from './pages/AddBinPage';
 import ProfilePage from './pages/ProfilePage';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -153,6 +154,7 @@ function App() {
             <Route index element={<Navigate to="/dashboard/map" replace />} />
             <Route path="map" element={<MapPage />} />
             <Route path="add" element={<AddReportPage />} />
+            <Route path="add-bin" element={<AddBinPage />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>
 
