@@ -101,7 +101,7 @@ describe('Auth Integration Tests', () => {
     });
 
     describe('POST /api/auth/verify-otp', () => {
-        it('should verify user with correct OTP', async () => {
+        it('should verify user with correct OTP and return token', async () => {
             // Setup
             const userData = { name: 'Verify User', email: 'verify@example.com' };
             const user = await User.create({ ...userData, verified: false });
@@ -120,6 +120,9 @@ describe('Auth Integration Tests', () => {
 
             expect(res.status).toBe(200);
             expect(res.body.message).toBe('OTP is correct, email is verified.');
+            expect(res.body.token).toBeDefined(); // Check for token
+            expect(res.body.user).toBeDefined();
+            expect(res.body.user.email).toBe(userData.email);
 
             // Verify user is updated
             const updatedUser = await User.findById(user._id);
@@ -169,6 +172,32 @@ describe('Auth Integration Tests', () => {
 
             expect(res.status).toBe(400);
             expect(res.body.message).toContain('No active OTP found');
+        });
+    });
+
+    describe('POST /api/auth/login', () => {
+        it('should send OTP for existing user', async () => {
+            const userData = { name: 'Login User', email: 'login@example.com' };
+            await User.create(userData);
+
+            const res = await request(app)
+                .post('/api/auth/login')
+                .send({ email: userData.email });
+
+            expect(res.status).toBe(200);
+            expect(res.body.message).toContain('OTP sent');
+
+            const otp = await Otp.findOne({ email: userData.email });
+            expect(otp).toBeTruthy();
+        });
+
+        it('should return 404 for non-existent user', async () => {
+            const res = await request(app)
+                .post('/api/auth/login')
+                .send({ email: 'unknown@example.com' });
+
+            expect(res.status).toBe(404);
+            expect(res.body.message).toContain('User not found');
         });
     });
 
