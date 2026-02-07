@@ -41,6 +41,37 @@ const createReport = async (req, res) => {
     }
 };
 
+// @desc    Get all reports
+// @route   GET /api/reports
+// @access  Public
+const getAllReports = async (req, res) => {
+    try {
+        const reports = await Report.find()
+            .populate('user', 'name')
+            .sort({ createdAt: -1 });
+        res.json(reports);
+    } catch (error) {
+        console.error('Get reports error:', error);
+        res.status(500).json({ message: 'Server error while fetching reports' });
+    }
+};
+
+// @desc    Get current user's reports
+// @route   GET /api/reports/my
+// @access  Private
+const getUserReports = async (req, res) => {
+    try {
+        const reports = await Report.find({ user: req.user._id })
+            .sort({ createdAt: -1 });
+        res.json(reports);
+    } catch (error) {
+        console.error('Get user reports error:', error);
+        res.status(500).json({ message: 'Server error while fetching reports' });
+    }
+};
+
 module.exports = {
     createReport,
+    getAllReports,
+    getUserReports,
 };

@@ -53,7 +53,6 @@ const ProfileIcon = ({ active }) => (
 function DashboardLayout() {
     const { isAuthenticated, loading } = useAuth();
 
-    // Show nothing while checking auth
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -62,7 +61,6 @@ function DashboardLayout() {
         );
     }
 
-    // Redirect to login if not authenticated
     if (!isAuthenticated) {
         return <Navigate to="/" replace />;
     }
@@ -75,12 +73,12 @@ function DashboardLayout() {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-20">
-            {/* Main content area */}
+            {/* Main content */}
             <main className="h-[calc(100vh-5rem)]">
                 <Outlet />
             </main>
 
-            {/* Fixed bottom navigation */}
+            {/* Fixed bottom navigation - full width, icons centered together */}
             <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg">
                 <div className="flex justify-around items-center h-20 max-w-md mx-auto">
                     {navItems.map(({ to, label, Icon }) => (
