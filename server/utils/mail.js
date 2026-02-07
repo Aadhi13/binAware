@@ -98,6 +98,6 @@ const sendWelcomeMail = async (name, email) => {
 };
 
 module.exports = {
-    sendVerificationMail,
-    sendWelcomeMail
+    verificationMail: sendVerificationMail,
+    welcomeMail: sendWelcomeMail
 };
