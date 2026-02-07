@@ -12,6 +12,10 @@ const userSchema = new mongoose.Schema({
         trim: true,
         lowercase: true,
     },
+    verified: {
+        type: Boolean,
+        default: false,
+    },
 }, {
     timestamps: true,
 });
