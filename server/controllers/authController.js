@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Otp = require('../models/Otp');
 const { generateOTP, hashOTP, verifyOTP } = require('../utils/otp');
 const { verificationMail } = require('../utils/mail');
+const { createToken } = require('../utils/auth');
 
 const register = async (req, res) => {
     try {
@@ -63,7 +64,43 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
-    res.send("Login Endpoint");
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ message: "Email is required" });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: "User not found. Please register first." });
+        }
+
+        // Generate OTP
+        const otp = generateOTP();
+        const otpHash = await hashOTP(otp);
+
+        // Create OTP record (expires in 10 mins)
+        await Otp.create({
+            user: user._id,
+            email,
+            otpHash,
+            expiresAt: new Date(Date.now() + 10 * 60 * 1000)
+        });
+
+        // Send Email
+        try {
+            await verificationMail(user.name, user.email, otp);
+        } catch (mailErr) {
+            console.error("Error sending login OTP email:", mailErr);
+            return res.status(500).json({ message: "Error sending OTP" });
+        }
+
+        return res.status(200).json({ message: "OTP sent to your email" });
+
+    } catch (error) {
+        console.error("Login Error:", error);
+        res.status(500).json({ message: "Server Error" });
+    }
 };
 
 const verifyOtp = async (req, res, next) => {
@@ -109,6 +146,7 @@ const verifyOtp = async (req, res, next) => {
         }
 
         if (!matchedDoc) {
+            console.log("No matching OTP found for:", otp);
             return res.status(401).json({ message: "OTP is not correct." });
         }
 
@@ -123,7 +161,19 @@ const verifyOtp = async (req, res, next) => {
         // TODO: Send verification successful email? 
         // For now, just return success.
 
-        return res.status(200).json({ message: "OTP is correct, email is verified." });
+        // Generate JWT token
+        const token = createToken(user._id);
+
+        return res.status(200).json({
+            message: "OTP is correct, email is verified.",
+            token,
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                verified: user.verified
+            }
+        });
 
     } catch (err) {
         console.error("Verify OTP Error:", err);
