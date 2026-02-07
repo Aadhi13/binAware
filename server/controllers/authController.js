@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const Otp = require('../models/Otp');
 const { generateOTP, hashOTP } = require('../utils/otp');
-const { sendVerificationMail } = require('../utils/mail');
+const { verificationMail } = require('../utils/mail');
 
 const register = async (req, res) => {
     try {
@@ -48,7 +48,7 @@ const register = async (req, res) => {
         });
 
         // Send Email
-        await sendVerificationMail(email, otp);
+        await verificationMail(user.name, email, otp);
 
         res.status(201).json({
             message: "OTP sent successfully",
