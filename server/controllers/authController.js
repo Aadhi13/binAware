@@ -116,9 +116,6 @@ const verifyOtp = async (req, res, next) => {
             return res.status(400).json({ message: "User not found" });
         }
 
-        if (user.verified) {
-            return res.status(200).json({ message: "Email is already verified." });
-        }
 
         // find ALL active OTPs (unexpired + unused) for this user/email
         const now = new Date();
@@ -184,6 +181,7 @@ const verifyOtp = async (req, res, next) => {
 const resendOtp = async (req, res, next) => {
     try {
         const { email } = req.body;
+        console.log("resend email from server: ", email);
         if (!email) {
             return res.status(400).json({ message: "Email is required" });
         }
@@ -193,10 +191,6 @@ const resendOtp = async (req, res, next) => {
             return res.status(400).json({
                 message: "User not found. Register first then request OTP to verify.",
             });
-        }
-
-        if (user.verified) {
-            return res.status(200).json({ message: "Email is already verified." });
         }
 
         // Generate otp
