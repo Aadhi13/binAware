@@ -1,0 +1,1 @@
+# binAware - Real-Time Civic Waste Monitoring and Awareness Platform
