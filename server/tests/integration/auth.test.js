@@ -6,6 +6,7 @@ const authRouter = require('../../routes/authRoutes');
 const User = require('../../models/User');
 const Otp = require('../../models/Otp');
 const testConfig = require('../testConfig');
+const { hashOTP, verifyOTP } = require('../../utils/otp');
 
 // Conditional mocking: Only mock if real mail is NOT enabled
 if (!testConfig.enableRealMail) {
@@ -96,6 +97,104 @@ describe('Auth Integration Tests', () => {
 
             expect(res.status).toBe(400);
             expect(res.body.message).toBe('Invalid email format');
+        });
+    });
+
+    describe('POST /api/auth/verify-otp', () => {
+        it('should verify user with correct OTP', async () => {
+            // Setup
+            const userData = { name: 'Verify User', email: 'verify@example.com' };
+            const user = await User.create({ ...userData, verified: false });
+            const otp = '123456';
+            const otpHash = await hashOTP(otp);
+            await Otp.create({
+                user: user._id,
+                email: userData.email,
+                otpHash,
+                expiresAt: new Date(Date.now() + 10 * 60 * 1000)
+            });
+
+            const res = await request(app)
+                .post('/api/auth/verify-otp')
+                .send({ email: userData.email, otp });
+
+            expect(res.status).toBe(200);
+            expect(res.body.message).toBe('OTP is correct, email is verified.');
+
+            // Verify user is updated
+            const updatedUser = await User.findById(user._id);
+            expect(updatedUser.verified).toBe(true);
+
+            // Verify OTP is marked used
+            const updatedOtp = await Otp.findOne({ email: userData.email });
+            expect(updatedOtp.used).toBe(true);
+        });
+
+        it('should reject incorrect OTP', async () => {
+            // Setup
+            const userData = { name: 'Verify User 2', email: 'verify2@example.com' };
+            const user = await User.create({ ...userData, verified: false });
+            const otpHash = await hashOTP('123456');
+            await Otp.create({
+                user: user._id,
+                email: userData.email,
+                otpHash,
+                expiresAt: new Date(Date.now() + 10 * 60 * 1000)
+            });
+
+            const res = await request(app)
+                .post('/api/auth/verify-otp')
+                .send({ email: userData.email, otp: '654321' });
+
+            expect(res.status).toBe(401);
+            expect(res.body.message).toBe('OTP is not correct.');
+        });
+
+        it('should reject expired OTP', async () => {
+            // Setup
+            const userData = { name: 'Expired User', email: 'expired@example.com' };
+            const user = await User.create({ ...userData, verified: false });
+            const otp = '123456';
+            const otpHash = await hashOTP(otp);
+            await Otp.create({
+                user: user._id,
+                email: userData.email,
+                otpHash,
+                expiresAt: new Date(Date.now() - 1000) // Expired
+            });
+
+            const res = await request(app)
+                .post('/api/auth/verify-otp')
+                .send({ email: userData.email, otp });
+
+            expect(res.status).toBe(400);
+            expect(res.body.message).toContain('No active OTP found');
+        });
+    });
+
+    describe('POST /api/auth/resend-otp', () => {
+        it('should resend OTP for unverified user', async () => {
+            const userData = { name: 'Resend User', email: 'resend@example.com' };
+            await User.create({ ...userData, verified: false });
+
+            const res = await request(app)
+                .post('/api/auth/resend-otp')
+                .send({ email: userData.email });
+
+            expect(res.status).toBe(201);
+            expect(res.body.message).toBe('OTP resent successfully');
+
+            const otp = await Otp.findOne({ email: userData.email });
+            expect(otp).toBeTruthy();
+        });
+
+        it('should not resend for unknown user', async () => {
+            const res = await request(app)
+                .post('/api/auth/resend-otp')
+                .send({ email: 'unknown@example.com' });
+
+            expect(res.status).toBe(400);
+            expect(res.body.message).toContain('User not found');
         });
     });
 });
