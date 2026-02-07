@@ -36,7 +36,7 @@ const register = async (req, res) => {
 
         // Generate OTP
         const otp = generateOTP();
-        const otpHash = hashOTP(otp);
+        const otpHash = await hashOTP(otp);
 
         // Create OTP record
         // Expires in 10 minutes
