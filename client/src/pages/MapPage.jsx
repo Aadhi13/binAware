@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { useState, useEffect, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet.heat';
 
 // Custom marker icons for reports (circles)
 const createReportIcon = (color) => {
@@ -75,12 +76,75 @@ const binStatusLabels = {
     'misused': 'Misused/Damaged',
 };
 
+// Intensity weights by report type
+const intensityWeights = {
+    'overflow': 1.2,
+    'littered-area': 1.0,
+    'missing-bin': 0.8,
+    'misused-bin': 0.8,
+};
+
+// Heatmap layer component
+function HeatmapLayer({ reports, showHeatmap }) {
+    const map = useMap();
+    const heatLayerRef = useRef(null);
+
+    useEffect(() => {
+        if (!showHeatmap) {
+            // Remove heatmap if it exists
+            if (heatLayerRef.current) {
+                map.removeLayer(heatLayerRef.current);
+                heatLayerRef.current = null;
+            }
+            return;
+        }
+
+        // Create heatmap data points with intensity
+        const heatData = reports.map(report => [
+            report.lat,
+            report.lng,
+            intensityWeights[report.type] || 1.0
+        ]);
+
+        // Remove existing heatmap layer
+        if (heatLayerRef.current) {
+            map.removeLayer(heatLayerRef.current);
+        }
+
+        // Create new heatmap layer
+        if (heatData.length > 0) {
+            heatLayerRef.current = L.heatLayer(heatData, {
+                radius: 25,
+                blur: 15,
+                maxZoom: 17,
+                max: 1.2,
+                gradient: {
+                    0.2: '#22c55e',  // green
+                    0.4: '#84cc16',  // lime
+                    0.6: '#eab308',  // yellow
+                    0.8: '#f97316',  // orange
+                    1.0: '#ef4444'   // red
+                }
+            }).addTo(map);
+        }
+
+        return () => {
+            if (heatLayerRef.current) {
+                map.removeLayer(heatLayerRef.current);
+            }
+        };
+    }, [map, reports, showHeatmap]);
+
+    return null;
+}
+
 function MapPage() {
     const [reports, setReports] = useState([]);
     const [bins, setBins] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showLayer, setShowLayer] = useState('all'); // 'all', 'reports', 'bins'
+    const [showHeatmap, setShowHeatmap] = useState(false);
 
     // Bangalore center
     const center = [12.9716, 77.5946];
@@ -140,8 +204,11 @@ function MapPage() {
                     attribution='&copy; OpenStreetMap'
                 />
 
-                {/* Report markers */}
-                {(showLayer === 'all' || showLayer === 'reports') && reports.map((report) => (
+                {/* Heatmap layer */}
+                <HeatmapLayer reports={reports} showHeatmap={showHeatmap} />
+
+                {/* Report markers - hide when heatmap is on */}
+                {!showHeatmap && (showLayer === 'all' || showLayer === 'reports') && reports.map((report) => (
                     <Marker
                         key={`report-${report._id}`}
                         position={[report.lat, report.lng]}
@@ -164,8 +231,8 @@ function MapPage() {
                     </Marker>
                 ))}
 
-                {/* Bin markers */}
-                {(showLayer === 'all' || showLayer === 'bins') && bins.map((bin) => (
+                {/* Bin markers - always show unless filtered */}
+                {!showHeatmap && (showLayer === 'all' || showLayer === 'bins') && bins.map((bin) => (
                     <Marker
                         key={`bin-${bin._id}`}
                         position={[bin.lat, bin.lng]}
@@ -197,40 +264,70 @@ function MapPage() {
                 </div>
             )}
 
-            {/* Layer toggle */}
-            <div className="absolute top-2 right-2 bg-white rounded-lg shadow-md z-[1000] p-1">
-                <div className="flex gap-1">
-                    {['all', 'reports', 'bins'].map((layer) => (
-                        <button
-                            key={layer}
-                            onClick={() => setShowLayer(layer)}
-                            className={`px-2 py-1 text-xs rounded font-medium transition-colors capitalize
-                                ${showLayer === layer ? 'bg-civic-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
-                        >
-                            {layer}
-                        </button>
-                    ))}
+            {/* Controls - Top Right */}
+            <div className="absolute top-2 right-2 flex flex-col gap-2 z-[1000]">
+                {/* Layer toggle */}
+                <div className="bg-white rounded-lg shadow-md p-1">
+                    <div className="flex gap-1">
+                        {['all', 'reports', 'bins'].map((layer) => (
+                            <button
+                                key={layer}
+                                onClick={() => { setShowLayer(layer); setShowHeatmap(false); }}
+                                className={`px-2 py-1 text-xs rounded font-medium transition-colors capitalize
+                                    ${showLayer === layer && !showHeatmap ? 'bg-civic-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
+                            >
+                                {layer}
+                            </button>
+                        ))}
+                    </div>
                 </div>
+
+                {/* Heatmap toggle */}
+                <button
+                    onClick={() => setShowHeatmap(!showHeatmap)}
+                    className={`px-3 py-2 rounded-lg shadow-md text-xs font-medium transition-all flex items-center gap-1.5
+                        ${showHeatmap
+                            ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white'
+                            : 'bg-white text-slate-600 hover:bg-slate-50'}`}
+                >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
+                    </svg>
+                    {showHeatmap ? 'Hide Heatmap' : 'Show Heatmap'}
+                </button>
             </div>
 
             {/* Legend */}
             <div className="absolute bottom-2 left-2 bg-white/95 rounded-lg shadow-md px-2 py-1.5 z-[1000]">
-                <div className="flex flex-wrap gap-3 text-xs">
-                    {/* Report legend */}
-                    {(showLayer === 'all' || showLayer === 'reports') && Object.entries(reportColors).map(([type, color]) => (
-                        <div key={type} className="flex items-center gap-1">
-                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: color }}></span>
-                            <span className="text-slate-600 hidden sm:inline">{reportTypeLabels[type].split(' ')[0]}</span>
+                {showHeatmap ? (
+                    <div className="flex items-center gap-2 text-xs">
+                        <span className="text-slate-600 font-medium">Intensity:</span>
+                        <div className="flex items-center gap-1">
+                            <div className="w-16 h-2 rounded-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500"></div>
                         </div>
-                    ))}
-                    {/* Bin legend */}
-                    {(showLayer === 'all' || showLayer === 'bins') && (
-                        <div className="flex items-center gap-1 border-l border-slate-200 pl-2">
-                            <span className="w-2 h-2 rounded-sm bg-green-500"></span>
-                            <span className="text-slate-600 hidden sm:inline">Bins</span>
-                        </div>
-                    )}
-                </div>
+                        <span className="text-slate-500">Low → High</span>
+                    </div>
+                ) : (
+                    <div className="flex flex-wrap gap-3 text-xs">
+                        {/* Report legend */}
+                        {(showLayer === 'all' || showLayer === 'reports') && Object.entries(reportColors).map(([type, color]) => (
+                            <div key={type} className="flex items-center gap-1">
+                                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: color }}></span>
+                                <span className="text-slate-600 hidden sm:inline">{reportTypeLabels[type].split(' ')[0]}</span>
+                            </div>
+                        ))}
+                        {/* Bin legend */}
+                        {(showLayer === 'all' || showLayer === 'bins') && (
+                            <div className="flex items-center gap-1 border-l border-slate-200 pl-2">
+                                <span className="w-2 h-2 rounded-sm bg-green-500"></span>
+                                <span className="text-slate-600 hidden sm:inline">Bins</span>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
