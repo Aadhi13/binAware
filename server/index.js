@@ -8,7 +8,7 @@ const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json({
-  origin: process.evn.CORS_ORIGIN, // replace with actual Vercel domain
+  origin: process.env.CORS_ORIGIN, // replace with actual Vercel domain
   credentials: true, // if using cookies or auth headers
 }));
 
