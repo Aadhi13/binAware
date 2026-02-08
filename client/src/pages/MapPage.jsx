@@ -535,14 +535,7 @@ function MapPage() {
               getDirections={getDirections}
               loadingRoute={loadingRoute}
             />
-            {userLocation && (
-              <Popup autoClose={false} closeOnClick={false}>
-                {/* This is a hack because Leaflet only supports one Popup per Marker */}
-                {/* We are actually replacing the logic inside BinPopup to include directions button if needed,
-                    OR we can just add the directions button TO the BinPopup.
-                    Let's add directions button to BinPopup for cleaner UI. */}
-              </Popup>
-            )}
+
           </Marker>
         ))}
       </MapContainer>
