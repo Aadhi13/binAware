@@ -7,7 +7,10 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({
+  origin: process.evn.CORS_ORIGIN, // replace with actual Vercel domain
+  credentials: true, // if using cookies or auth headers
+}));
 
 const uri = process.env.ATLAS_URI;
 mongoose.connect(uri);
