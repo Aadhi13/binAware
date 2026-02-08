@@ -79,8 +79,42 @@ const getUserReports = async (req, res) => {
     }
 };
 
+// @desc    Toggle upvote on a report
+// @route   PATCH /api/reports/:id/upvote
+// @access  Private
+const toggleUpvote = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user._id;
+
+        const report = await Report.findById(id);
+
+        if (!report) {
+            return res.status(404).json({ message: 'Report not found' });
+        }
+
+        const isUpvoted = report.upvotes.includes(userId);
+
+        if (isUpvoted) {
+            // Remove upvote
+            report.upvotes.pull(userId);
+        } else {
+            // Add upvote
+            report.upvotes.addToSet(userId);
+        }
+
+        await report.save();
+
+        res.json(report);
+    } catch (error) {
+        console.error('Toggle upvote error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 module.exports = {
     createReport,
     getAllReports,
     getUserReports,
+    toggleUpvote,
 };

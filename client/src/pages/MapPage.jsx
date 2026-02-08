@@ -349,6 +349,86 @@ function BinPopup({ bin, onUpdate, token, userLocation, getDirections, loadingRo
   );
 }
 
+// Report Popup Component with Upvoid Logic
+function ReportPopup({ report, onUpdate, token, user }) {
+  const [upvoting, setUpvoting] = useState(false);
+
+  const isUpvoted = report.upvotes && user && report.upvotes.includes(user._id);
+  const upvoteCount = report.upvotes ? report.upvotes.length : 0;
+
+  const handleUpvote = async () => {
+    if (!token || upvoting) return;
+
+    setUpvoting(true);
+    try {
+      const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_BASE}/reports/${report._id}/upvote`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (res.ok) {
+        const updatedReport = await res.json();
+        onUpdate(updatedReport);
+      }
+    } catch (err) {
+      console.error('Upvote error:', err);
+    } finally {
+      setUpvoting(false);
+    }
+  };
+
+  return (
+    <Popup>
+      <div className="text-sm min-w-[200px]">
+        <div className="flex items-start justify-between mb-2">
+          <div>
+            <p className="font-semibold text-slate-800">
+              {reportTypeLabels[report.type] || report.type}
+            </p>
+            <p className="text-xs text-slate-400">{new Date(report.createdAt).toLocaleDateString()}</p>
+          </div>
+          {/* Upvote Button */}
+          <button
+            onClick={handleUpvote}
+            disabled={!token || upvoting}
+            className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border transition-colors
+                    ${isUpvoted
+                ? 'bg-civic-50 border-civic-200 text-civic-600'
+                : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
+              } ${(!token || upvoting) ? 'opacity-50 cursor-not-allowed' : ''}`}
+            title={token ? (isUpvoted ? 'Remove validation' : 'Validate this report') : 'Login to validate'}
+          >
+            <svg className="w-3.5 h-3.5" fill={isUpvoted ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+            </svg>
+            {upvoteCount}
+          </button>
+        </div>
+
+        {report.comment && (
+          <p className="text-slate-600 text-xs mb-2 bg-slate-50 p-2 rounded border border-slate-100 italic">"{report.comment}"</p>
+        )}
+
+        {report.photoUrl && (
+          <div className="mb-2">
+            <img src={report.photoUrl} alt="Report" className="w-full h-32 object-cover rounded shadow-sm" />
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-100">
+          <div className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-500">
+            {report.user?.name?.charAt(0) || '?'}
+          </div>
+          <span className="text-xs text-slate-500">Reported by {report.user?.name || 'Anonymous'}</span>
+        </div>
+      </div>
+    </Popup>
+  );
+}
+
 // Component to set map ref
 function MapRefSetter({ mapRef }) {
   const map = useMap();
@@ -377,7 +457,7 @@ function MapPage() {
   const [loadingRoute, setLoadingRoute] = useState(false);
   const mapRef = useRef(null);
 
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   const center = [12.9716, 77.5946];
 
@@ -425,6 +505,12 @@ function MapPage() {
   const handleBinUpdate = (updatedBin) => {
     setBins(currentBins =>
       currentBins.map(b => b._id === updatedBin._id ? updatedBin : b)
+    );
+  };
+
+  const handleReportUpdate = (updatedReport) => {
+    setReports(currentReports =>
+      currentReports.map(r => r._id === updatedReport._id ? updatedReport : r)
     );
   };
 
@@ -554,20 +640,12 @@ function MapPage() {
             position={[report.lat, report.lng]}
             icon={createReportIcon(report.type)}
           >
-            <Popup>
-              <div className="text-sm">
-                <p className="font-semibold text-slate-800 mb-1">
-                  📋 {reportTypeLabels[report.type] || report.type}
-                </p>
-                {report.comment && (
-                  <p className="text-slate-600 text-xs mb-1">{report.comment}</p>
-                )}
-                {report.photoUrl && (
-                  <img src={report.photoUrl} alt="" className="w-full h-16 object-cover rounded mb-1" />
-                )}
-                <p className="text-xs text-slate-400">{formatDate(report.createdAt)}</p>
-              </div>
-            </Popup>
+            <ReportPopup
+              report={report}
+              onUpdate={handleReportUpdate}
+              token={token}
+              user={user}
+            />
           </Marker>
         ))}
 
