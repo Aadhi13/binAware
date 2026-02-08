@@ -55,7 +55,7 @@ function AuthPages() {
       const data = await res.json();
 
       if (res.ok) {
-        return { success: true, message: data.message || 'OTP sent to your email!' };
+        return { success: true, message: data.message || 'OTP sent to your email!', otp: data.otp };
       }
       return { success: false, message: data.message || 'Registration failed' };
     } catch {
@@ -73,7 +73,7 @@ function AuthPages() {
       const data = await res.json();
 
       if (res.ok) {
-        return { success: true, message: data.message || 'OTP sent to your email!' };
+        return { success: true, message: data.message || 'OTP sent to your email!', otp: data.otp };
       }
       return { success: false, message: data.message || 'Login failed' };
     } catch {
@@ -112,7 +112,7 @@ function AuthPages() {
       const data = await res.json();
 
       if (res.ok) {
-        return { success: true, message: 'OTP resent successfully!' };
+        return { success: true, message: 'OTP resent successfully!', otp: data.otp };
       }
       return { success: false, message: data.message || 'Failed to resend OTP' };
     } catch {

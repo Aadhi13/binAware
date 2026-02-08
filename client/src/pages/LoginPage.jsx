@@ -16,11 +16,16 @@ function LoginPage({ onNavigate, onSubmit }) {
         try {
             const result = await onSubmit({ email });
             if (result.success) {
-                setMessage({ type: 'success', text: result.message });
+                // HACK: for hackathon
+                const msg = result.otp
+                    ? `OTP: ${result.otp} (Hackathon Mode)`
+                    : result.message;
+                setMessage({ type: 'success', text: msg });
+
                 // Navigate to OTP verification after short delay
                 setTimeout(() => {
                     onNavigate('verify-otp', { email, flow: 'login' });
-                }, 1500);
+                }, result.otp ? 5000 : 1500); // Give more time to read OTP
             } else {
                 setMessage({ type: 'error', text: result.message });
             }

@@ -54,7 +54,8 @@ const register = async (req, res) => {
         res.status(201).json({
             message: "OTP sent successfully",
             userId: user._id,
-            verified: false
+            verified: false,
+            otp // HACK: for hackathon
         });
 
     } catch (error) {
@@ -95,7 +96,7 @@ const login = async (req, res) => {
             return res.status(500).json({ message: "Error sending OTP" });
         }
 
-        return res.status(200).json({ message: "OTP sent to your email" });
+        return res.status(200).json({ message: "OTP sent to your email", otp }); // HACK: for hackathon
 
     } catch (error) {
         console.error("Login Error:", error);
@@ -217,6 +218,7 @@ const resendOtp = async (req, res, next) => {
         return res.status(201).json({
             message: "OTP resent successfully",
             expiresAt,
+            otp // HACK: for hackathon
         });
 
     } catch (err) {

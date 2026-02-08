@@ -89,7 +89,11 @@ function VerifyOTPPage({ email, flow, onNavigate, onSubmit, onResend }) {
         try {
             const result = await onResend({ email });
             if (result.success) {
-                setMessage({ type: 'success', text: 'OTP resent successfully!' });
+                // HACK: for hackathon
+                const msg = result.otp
+                    ? `OTP Resent: ${result.otp} (Hackathon Mode)`
+                    : 'OTP resent successfully!';
+                setMessage({ type: 'success', text: msg });
                 setOtp(['', '', '', '', '', '']);
                 inputRefs.current[0]?.focus();
             } else {

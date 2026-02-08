@@ -17,11 +17,16 @@ function RegisterPage({ onNavigate, onSubmit }) {
         try {
             const result = await onSubmit({ name, email });
             if (result.success) {
-                setMessage({ type: 'success', text: result.message });
+                // HACK: for hackathon
+                const msg = result.otp
+                    ? `OTP: ${result.otp} (Hackathon Mode)`
+                    : result.message;
+                setMessage({ type: 'success', text: msg });
+
                 // Navigate to OTP verification after short delay
                 setTimeout(() => {
                     onNavigate('verify-otp', { email, flow: 'register' });
-                }, 1500);
+                }, result.otp ? 5000 : 1500);
             } else {
                 setMessage({ type: 'error', text: result.message });
             }
