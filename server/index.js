@@ -1,6 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const dns = require('node:dns');
+
+// Force IPv4 for DNS resolution to fix Render/Nodemailer issues
+dns.setDefaultResultOrder('ipv4first');
+
 require('dotenv').config();
 const allowedOrigin = process.env.CORS_ORIGIN;
 
@@ -30,7 +35,7 @@ const reportRouter = require('./routes/reportRoutes');
 const binRouter = require('./routes/binRoutes');
 const userRouter = require('./routes/userRoutes');
 
-console.log("inside index.js", );
+console.log("inside index.js",);
 
 app.use('/api', helloRouter);
 app.use('/api/auth', authRouter);
