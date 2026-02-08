@@ -240,7 +240,7 @@ function MapPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
         const [reportsRes, binsRes] = await Promise.all([
           fetch(`${API_BASE}/reports`),

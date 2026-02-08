@@ -6,11 +6,14 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-app.use(cors());
-app.use(express.json({
-  origin: process.env.CORS_ORIGIN, // replace with actual Vercel domain
-  credentials: true, // if using cookies or auth headers
+// CORS configuration for cross-origin requests
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+app.use(express.json());
 
 const uri = process.env.ATLAS_URI;
 mongoose.connect(uri);

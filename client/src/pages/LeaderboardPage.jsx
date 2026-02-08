@@ -8,7 +8,7 @@ function LeaderboardPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
     useEffect(() => {
         const fetchLeaderboard = async () => {
@@ -81,8 +81,8 @@ function LeaderboardPage() {
                             <div
                                 key={entry._id}
                                 className={`rounded-xl overflow-hidden transition-all ${isCurrentUser
-                                        ? 'bg-gradient-to-r from-civic-500 to-civic-600 text-white ring-2 ring-civic-400 shadow-lg'
-                                        : 'bg-white shadow-sm hover:shadow-md'
+                                    ? 'bg-gradient-to-r from-civic-500 to-civic-600 text-white ring-2 ring-civic-400 shadow-lg'
+                                    : 'bg-white shadow-sm hover:shadow-md'
                                     }`}
                             >
                                 <div className="flex items-center p-4 gap-3">
