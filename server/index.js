@@ -31,7 +31,7 @@ const userRouter = require('./routes/userRoutes');
 
 console.log("inside index.js", );
 
-app.use('/', helloRouter);
+app.use('/api', helloRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/reports', reportRouter);
 app.use('/api/bins', binRouter);
