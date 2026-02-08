@@ -29,6 +29,8 @@ const reportRouter = require('./routes/reportRoutes');
 const binRouter = require('./routes/binRoutes');
 const userRouter = require('./routes/userRoutes');
 
+console.log("inside index.js", );
+
 app.use('/', helloRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/reports', reportRouter);
