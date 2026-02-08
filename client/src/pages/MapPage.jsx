@@ -3,7 +3,11 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.heat';
-
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import 'leaflet.heat';
+import { useAuth } from '../context/AuthContext';
 // Custom marker icons for reports (circles)
 const createReportIcon = (color) => {
   return L.divIcon({
@@ -196,6 +200,107 @@ function HeatmapLayer({ reports, showHeatmap }) {
   return null;
 }
 
+// Bin Popup Component for Status Updates
+function BinPopup({ bin, onUpdate, token, userLocation, getDirections, loadingRoute }) {
+  const [status, setStatus] = useState(bin.status);
+  const [updating, setUpdating] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const statusOptions = [
+    { value: 'good', label: 'Good' },
+    { value: 'overflow', label: 'Overflowing' },
+    { value: 'missing', label: 'Missing' },
+    { value: 'misused', label: 'Misused' },
+  ];
+
+  const handleUpdate = async () => {
+    if (status === bin.status) return;
+
+    setUpdating(true);
+    setMessage('');
+
+    try {
+      const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_BASE}/bins/${bin._id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status })
+      });
+
+      if (res.ok) {
+        const updatedBin = await res.json();
+        onUpdate(updatedBin);
+        setMessage('Updated!');
+        setTimeout(() => setMessage(''), 2000);
+      } else {
+        setMessage('Failed');
+      }
+    } catch (err) {
+      console.error(err);
+      setMessage('Error');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  return (
+    <Popup>
+      <div className="text-sm min-w-[160px]">
+        <p className="font-semibold text-slate-800 mb-1">
+          🗑️ Bin - {binStatusLabels[bin.status] || bin.status}
+        </p>
+        <p className="text-xs text-slate-400 mb-3">Added {new Date(bin.createdAt).toLocaleDateString()}</p>
+
+        {token ? (
+          <div className="bg-slate-50 p-2 rounded-md border border-slate-100 mb-3">
+            <label className="block text-xs font-medium text-slate-600 mb-1">Update Status:</label>
+            <div className="flex gap-1 mb-2">
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="text-xs border border-slate-300 rounded px-1 py-1 w-full bg-white focus:ring-1 focus:ring-blue-500 outline-none"
+                disabled={updating}
+              >
+                {statusOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+            <button
+              onClick={handleUpdate}
+              disabled={updating || status === bin.status}
+              className={`w-full text-xs text-white py-1.5 rounded transition-colors
+                                ${updating || status === bin.status ? 'bg-slate-300' : 'bg-civic-600 hover:bg-civic-700'}`}
+            >
+              {updating ? 'Updating...' : 'Update Status'}
+            </button>
+            {message && <p className="text-xs text-center mt-1 text-green-600 font-medium">{message}</p>}
+          </div>
+        ) : (
+          <p className="text-xs text-slate-500 italic mb-2">Login to update status</p>
+        )}
+
+        {userLocation && (
+          <button
+            onClick={() => getDirections(bin)}
+            disabled={loadingRoute}
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium py-1.5 px-3 rounded transition-colors disabled:opacity-50"
+          >
+            {loadingRoute ? 'Loading...' : '🚶 Get Directions'}
+          </button>
+        )}
+
+        {!userLocation && (
+          <p className="text-xs text-amber-600 mt-2 pt-2 border-t border-slate-100">Enable location for directions</p>
+        )}
+      </div>
+    </Popup>
+  );
+}
+
 // Component to set map ref
 function MapRefSetter({ mapRef }) {
   const map = useMap();
@@ -223,6 +328,8 @@ function MapPage() {
   const [routeInfo, setRouteInfo] = useState(null);
   const [loadingRoute, setLoadingRoute] = useState(false);
   const mapRef = useRef(null);
+
+  const { token } = useAuth();
 
   const center = [12.9716, 77.5946];
 
@@ -266,6 +373,12 @@ function MapPage() {
 
     fetchData();
   }, []);
+
+  const handleBinUpdate = (updatedBin) => {
+    setBins(currentBins =>
+      currentBins.map(b => b._id === updatedBin._id ? updatedBin : b)
+    );
+  };
 
   // Get user location
   useEffect(() => {
@@ -417,28 +530,22 @@ function MapPage() {
             position={[bin.lat, bin.lng]}
             icon={createBinIcon(binColors[bin.status] || '#6b7280')}
           >
-            <Popup>
-              <div className="text-sm min-w-[150px]">
-                <p className="font-semibold text-slate-800 mb-1">
-                  🗑️ Bin - {binStatusLabels[bin.status] || bin.status}
-                </p>
-                <p className="text-xs text-slate-400 mb-2">Added {formatDate(bin.createdAt)}</p>
-
-                {userLocation && (
-                  <button
-                    onClick={() => getDirections(bin)}
-                    disabled={loadingRoute}
-                    className="w-full bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium py-1.5 px-3 rounded transition-colors disabled:opacity-50"
-                  >
-                    {loadingRoute ? 'Loading...' : '🚶 Get Directions'}
-                  </button>
-                )}
-
-                {!userLocation && (
-                  <p className="text-xs text-amber-600">Enable location for directions</p>
-                )}
-              </div>
-            </Popup>
+            <BinPopup
+              bin={bin}
+              onUpdate={handleBinUpdate}
+              token={token}
+              userLocation={userLocation}
+              getDirections={getDirections}
+              loadingRoute={loadingRoute}
+            />
+            {userLocation && (
+              <Popup autoClose={false} closeOnClick={false}>
+                {/* This is a hack because Leaflet only supports one Popup per Marker */}
+                {/* We are actually replacing the logic inside BinPopup to include directions button if needed,
+                    OR we can just add the directions button TO the BinPopup.
+                    Let's add directions button to BinPopup for cleaner UI. */}
+              </Popup>
+            )}
           </Marker>
         ))}
       </MapContainer>
