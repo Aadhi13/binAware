@@ -545,7 +545,7 @@ function MapPage() {
       </div>
 
       {/* Legend */}
-      <div className="absolute bottom-2 left-2 right-12 z-[999] rounded-lg bg-white/95 px-2 py-1.5 shadow-md max-w-full overflow-x-auto">
+      <div className="absolute bottom-2 left-2 right-12 sm:right-auto sm:max-w-fit z-[999] rounded-lg bg-white/95 px-2 py-1.5 shadow-md max-w-full overflow-x-auto">
         {showHeatmap ? (
           <div className="flex items-center gap-2 text-xs whitespace-nowrap">
             <span className="font-medium text-slate-600">Intensity:</span>
