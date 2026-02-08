@@ -98,25 +98,29 @@ function DashboardLayout() {
             {/* Fixed bottom navigation - 4 items */}
             <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg">
                 <div className="flex justify-around items-center h-20 max-w-lg mx-auto">
-                    {navItems.map(({ to, label, Icon }) => (
-                        <NavLink
-                            key={to}
-                            to={to}
-                            className={({ isActive }) =>
-                                `flex flex-col items-center justify-center px-3 py-2 rounded-lg transition-colors
+                    {navItems.map((item) => {
+                        const Icon = item.Icon;
+                        return (
+                            <NavLink
+                                key={item.to}
+                                to={item.to}
+                                className={({ isActive }) =>
+                                    `flex flex-col items-center justify-center px-3 py-2 rounded-lg transition-colors
                 ${isActive ? 'text-civic-600' : 'text-slate-400 hover:text-slate-600'}`
-                            }
-                        >
-                            {({ isActive }) => (
-                                <>
-                                    <Icon active={isActive} />
-                                    <span className={`text-xs mt-1 font-medium ${isActive ? 'text-civic-600' : ''}`}>
-                                        {label}
-                                    </span>
-                                </>
-                            )}
-                        </NavLink>
-                    ))}
+                                }
+                            >
+                                {({ isActive }) => (
+                                    <>
+                                        <Icon active={isActive} />
+                                        <span className={`text-xs mt-1 font-medium ${isActive ? 'text-civic-600' : ''}`}>
+                                            {item.label}
+                                        </span>
+                                    </>
+                                )}
+                            </NavLink>
+                        );
+                    })}
+
                 </div>
             </nav>
         </div>

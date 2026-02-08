@@ -1,28 +1,21 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { useContext, useState } from 'react';
 import PropTypes from 'prop-types';
-
-const AuthContext = createContext(null);
+import { AuthContext } from './Context';
 
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(null);
-    const [token, setToken] = useState(null);
-    const [loading, setLoading] = useState(true);
-
-    // Load from localStorage on mount
-    useEffect(() => {
-        const storedToken = localStorage.getItem('token');
-        const storedUser = localStorage.getItem('user');
-
-        if (storedToken && storedUser) {
-            setToken(storedToken);
-            try {
-                setUser(JSON.parse(storedUser));
-            } catch (e) {
-                console.error('Failed to parse stored user:', e);
-            }
+    const [token, setToken] = useState(() => localStorage.getItem('token'));
+    const [user, setUser] = useState(() => {
+        try {
+            const storedUser = localStorage.getItem('user');
+            return storedUser ? JSON.parse(storedUser) : null;
+        } catch (e) {
+            console.error('Failed to parse stored user:', e);
+            return null;
         }
-        setLoading(false);
-    }, []);
+    });
+
+    // Loading is always false now since we initialize synchronously
+    const loading = false;
 
     const login = (userData, authToken) => {
         setUser(userData);
@@ -51,6 +44,7 @@ AuthProvider.propTypes = {
     children: PropTypes.node.isRequired,
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
     const context = useContext(AuthContext);
     if (!context) {
@@ -58,5 +52,3 @@ export function useAuth() {
     }
     return context;
 }
-
-export default AuthContext;

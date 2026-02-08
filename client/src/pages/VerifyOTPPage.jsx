@@ -75,7 +75,7 @@ function VerifyOTPPage({ email, flow, onNavigate, onSubmit, onResend }) {
             } else {
                 setMessage({ type: 'error', text: result.message });
             }
-        } catch (err) {
+        } catch {
             setMessage({ type: 'error', text: 'Something went wrong. Please try again.' });
         } finally {
             setLoading(false);
@@ -95,7 +95,7 @@ function VerifyOTPPage({ email, flow, onNavigate, onSubmit, onResend }) {
             } else {
                 setMessage({ type: 'error', text: result.message });
             }
-        } catch (err) {
+        } catch {
             setMessage({ type: 'error', text: 'Failed to resend OTP' });
         } finally {
             setResending(false);

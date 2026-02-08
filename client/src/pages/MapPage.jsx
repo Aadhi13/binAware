@@ -219,7 +219,6 @@ function MapPage() {
 
   // Geolocation and routing state
   const [userLocation, setUserLocation] = useState(null);
-  const [locationError, setLocationError] = useState(null);
   const [route, setRoute] = useState(null);
   const [routeInfo, setRouteInfo] = useState(null);
   const [loadingRoute, setLoadingRoute] = useState(false);
@@ -277,15 +276,13 @@ function MapPage() {
             lat: position.coords.latitude,
             lng: position.coords.longitude
           });
-          setLocationError(null);
         },
         (err) => {
-          setLocationError(err.message);
           console.error('Geolocation error:', err);
         }
       );
     } else {
-      setLocationError('Geolocation not supported');
+      console.error('Geolocation not supported');
     }
   }, []);
 

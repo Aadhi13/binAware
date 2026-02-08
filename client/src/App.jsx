@@ -58,7 +58,7 @@ function AuthPages() {
         return { success: true, message: data.message || 'OTP sent to your email!' };
       }
       return { success: false, message: data.message || 'Registration failed' };
-    } catch (err) {
+    } catch {
       return { success: false, message: 'Network error. Please try again.' };
     }
   };
@@ -76,7 +76,7 @@ function AuthPages() {
         return { success: true, message: data.message || 'OTP sent to your email!' };
       }
       return { success: false, message: data.message || 'Login failed' };
-    } catch (err) {
+    } catch {
       return { success: false, message: 'Network error. Please try again.' };
     }
   };
@@ -97,7 +97,7 @@ function AuthPages() {
         return { success: true, message: 'Verified successfully!' };
       }
       return { success: false, message: data.message || 'Verification failed' };
-    } catch (err) {
+    } catch {
       return { success: false, message: 'Network error. Please try again.' };
     }
   };
@@ -115,7 +115,7 @@ function AuthPages() {
         return { success: true, message: 'OTP resent successfully!' };
       }
       return { success: false, message: data.message || 'Failed to resend OTP' };
-    } catch (err) {
+    } catch {
       return { success: false, message: 'Network error. Please try again.' };
     }
   };

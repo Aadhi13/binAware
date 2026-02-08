@@ -25,7 +25,7 @@ function RegisterPage({ onNavigate, onSubmit }) {
             } else {
                 setMessage({ type: 'error', text: result.message });
             }
-        } catch (err) {
+        } catch {
             setMessage({ type: 'error', text: 'Something went wrong. Please try again.' });
         } finally {
             setLoading(false);
