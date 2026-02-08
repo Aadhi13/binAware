@@ -185,6 +185,28 @@ function ProfilePage() {
                     </div>
                 </div>
 
+                {/* Badges Section */}
+                <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
+                    <p className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-3">Badges & Achievements</p>
+
+                    {displayUser?.badges && displayUser.badges.length > 0 ? (
+                        <div className="grid grid-cols-4 gap-2">
+                            {displayUser.badges.map((badge, index) => (
+                                <div key={index} className="flex flex-col items-center text-center p-2 rounded-lg bg-slate-50 border border-slate-100" title={badge.description}>
+                                    <span className="text-2xl mb-1">{badge.icon}</span>
+                                    <span className="text-xs font-medium text-slate-700 leading-tight">{badge.name}</span>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-4 bg-slate-50 rounded-lg border border-dashed border-slate-200">
+                            <span className="text-2xl block mb-2">🌱</span>
+                            <p className="text-sm font-medium text-slate-600">No badges yet</p>
+                            <p className="text-xs text-slate-400">Start contributing to earn them!</p>
+                        </div>
+                    )}
+                </div>
+
                 {/* Leaderboard Button */}
                 <button
                     onClick={() => navigate('/dashboard/leaderboard')}

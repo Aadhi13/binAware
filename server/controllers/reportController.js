@@ -1,6 +1,8 @@
 const Report = require('../models/Report');
 const User = require('../models/User');
 
+const { checkBadges } = require('../utils/badgeService');
+
 // @desc    Create a new report
 // @route   POST /api/reports
 // @access  Private
@@ -34,7 +36,14 @@ const createReport = async (req, res) => {
             $inc: { points: 10 }
         });
 
-        res.status(201).json(report);
+        // Check for new badges
+        const newBadges = await checkBadges(req.user._id);
+        const responseReport = report.toObject();
+        if (newBadges && newBadges.length > 0) {
+            responseReport.newBadges = newBadges;
+        }
+
+        res.status(201).json(responseReport);
     } catch (error) {
         console.error('Create report error:', error);
         res.status(500).json({ message: 'Server error while creating report' });

@@ -1,6 +1,8 @@
 const Bin = require('../models/Bin');
 const User = require('../models/User');
 
+const { checkBadges } = require('../utils/badgeService');
+
 // Get all bins (public)
 const getAllBins = async (req, res) => {
     try {
@@ -42,7 +44,14 @@ const createBin = async (req, res) => {
         // Award points to user for adding a bin (+5 per bin)
         await User.findByIdAndUpdate(req.user._id, { $inc: { points: 5 } });
 
-        res.status(201).json(bin);
+        // Check for new badges
+        const newBadges = await checkBadges(req.user._id);
+        const responseBin = bin.toObject();
+        if (newBadges && newBadges.length > 0) {
+            responseBin.newBadges = newBadges;
+        }
+
+        res.status(201).json(responseBin);
     } catch (error) {
         console.error('Create bin error:', error);
         res.status(500).json({ message: 'Server error' });

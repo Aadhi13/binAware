@@ -20,6 +20,16 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
+    badges: [{
+        id: String,
+        name: String,
+        icon: String,
+        description: String,
+        earnedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
 }, {
     timestamps: true,
 });
