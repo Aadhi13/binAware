@@ -4,7 +4,7 @@ This guide outlines the steps to deploy the **binAware** application. The client
 
 ## 1. Backend Deployment (Render)
 
-We will deploy the Node.js/Express server first so we have the live API URL for the frontend.
+We will deploy the Node.js/Express server first so we have the live API URL for the frontend
 
 1.  **Push your code to GitHub/GitLab.**
 2.  **Log in to Render** and create a **New Web Service**.
