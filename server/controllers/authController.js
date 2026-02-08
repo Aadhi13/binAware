@@ -47,16 +47,17 @@ const register = async (req, res) => {
             otpHash,
             expiresAt: new Date(Date.now() + 10 * 60 * 1000)
         });
-
-        // Send Email
-        await verificationMail(user.name, email, otp);
-
+        
         res.status(201).json({
             message: "OTP sent successfully",
             userId: user._id,
             verified: false,
             otp // HACK: for hackathon
         });
+
+        // Send Email
+        await verificationMail(user.name, email, otp);
+
 
     } catch (error) {
         console.error("Register Error:", error);
@@ -88,6 +89,8 @@ const login = async (req, res) => {
             expiresAt: new Date(Date.now() + 10 * 60 * 1000)
         });
 
+        return res.status(200).json({ message: "OTP sent to your email", otp }); // HACK: for hackathon
+
         // Send Email
         try {
             await verificationMail(user.name, user.email, otp);
@@ -96,7 +99,6 @@ const login = async (req, res) => {
             return res.status(500).json({ message: "Error sending OTP" });
         }
 
-        return res.status(200).json({ message: "OTP sent to your email", otp }); // HACK: for hackathon
 
     } catch (error) {
         console.error("Login Error:", error);
@@ -206,6 +208,12 @@ const resendOtp = async (req, res, next) => {
             otpHash,
             expiresAt,
         });
+        
+        return res.status(201).json({
+            message: "OTP resent successfully",
+            expiresAt,
+            otp // HACK: for hackathon
+        });
 
         // Send email
         try {
@@ -215,11 +223,6 @@ const resendOtp = async (req, res, next) => {
             return res.status(500).json({ message: "Error sending email" });
         }
 
-        return res.status(201).json({
-            message: "OTP resent successfully",
-            expiresAt,
-            otp // HACK: for hackathon
-        });
 
     } catch (err) {
         console.error("Resend OTP Error:", err);
