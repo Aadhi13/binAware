@@ -6,20 +6,71 @@ import 'leaflet.heat';
 
 import { useAuth } from '../context/AuthContext';
 // Custom marker icons for reports (circles)
-const createReportIcon = (color) => {
+const createReportIcon = (type) => {
+  const color = reportColors[type] || '#6b7280';
+
+  let iconSvg = '';
+
+  switch (type) {
+    case 'overflow':
+      // Trash bag/pile icon
+      iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19 8H5L5 20C5 21.1 5.9 22 7 22H17C18.1 22 19 21.1 19 20V8ZM14.5 4L12.71 2.29C12.53 2.11 12.28 2 12 2C11.72 2 11.47 2.11 11.29 2.29L9.5 4H5V6H19V4H14.5Z" />
+        <path d="M8 10V18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        <path d="M12 10V18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        <path d="M16 10V18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="18" cy="6" r="3" fill="#ef4444" stroke="white" stroke-width="2"/>
+      </svg>`;
+      break;
+    case 'missing-bin':
+      // Bin with question mark or dashed outline
+      iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 6H5H21" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="white" stroke-width="2" stroke-dasharray="4 2" stroke-linecap="round" stroke-linejoin="round" fill-opacity="0.3"/>
+        <path d="M12 11V15" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="12" cy="17" r="1.5" fill="white"/>
+      </svg>`;
+      break;
+    case 'misused-bin':
+      // Warning symbol
+      iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L1 21H23L12 2ZM13 16V18H11V16H13ZM13 10V14H11V10H13Z" />
+      </svg>`;
+      break;
+    case 'littered-area':
+      // Scattered graphical elements
+      iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="8" cy="16" r="3" />
+        <path d="M18 6L16 10H20L18 6Z" />
+        <rect x="14" y="16" width="6" height="4" />
+        <path d="M4 6H10V8H4V6Z" />
+      </svg>`;
+      break;
+    default:
+      // Generic exclamation
+      iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+         <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" />
+      </svg>`;
+  }
+
   return L.divIcon({
     className: 'custom-marker',
     html: `<div style="
       background-color: ${color};
-      width: 20px;
-      height: 20px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
       border: 2px solid white;
       box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    "></div>`,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
-    popupAnchor: [0, -10],
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    ">
+      ${iconSvg}
+    </div>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+    popupAnchor: [0, -12],
   });
 };
 
@@ -501,7 +552,7 @@ function MapPage() {
           <Marker
             key={`report-${report._id}`}
             position={[report.lat, report.lng]}
-            icon={createReportIcon(reportColors[report.type] || '#6b7280')}
+            icon={createReportIcon(report.type)}
           >
             <Popup>
               <div className="text-sm">
