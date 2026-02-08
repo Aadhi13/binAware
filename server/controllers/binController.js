@@ -39,8 +39,8 @@ const createBin = async (req, res) => {
             createdBy: req.user._id,
         });
 
-        // Award point to user for adding a bin
-        await User.findByIdAndUpdate(req.user._id, { $inc: { points: 1 } });
+        // Award points to user for adding a bin (+5 per bin)
+        await User.findByIdAndUpdate(req.user._id, { $inc: { points: 5 } });
 
         res.status(201).json(bin);
     } catch (error) {

@@ -29,9 +29,9 @@ const createReport = async (req, res) => {
             user: req.user._id,
         });
 
-        // Increment user points
+        // Increment user points (+10 per report)
         await User.findByIdAndUpdate(req.user._id, {
-            $inc: { points: 1 }
+            $inc: { points: 10 }
         });
 
         res.status(201).json(report);

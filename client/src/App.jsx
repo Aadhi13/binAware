@@ -14,6 +14,7 @@ import MapPage from './pages/MapPage';
 import AddReportPage from './pages/AddReportPage';
 import AddBinPage from './pages/AddBinPage';
 import ProfilePage from './pages/ProfilePage';
+import LeaderboardPage from './pages/LeaderboardPage';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -156,6 +157,7 @@ function App() {
             <Route path="add" element={<AddReportPage />} />
             <Route path="add-bin" element={<AddBinPage />} />
             <Route path="profile" element={<ProfilePage />} />
+            <Route path="leaderboard" element={<LeaderboardPage />} />
           </Route>
 
           {/* Catch all */}
