@@ -2,11 +2,15 @@ const { createTransport } = require("nodemailer");
 require('dotenv').config();
 
 const transporter = createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
         user: process.env.AUTH_EMAIL,
         pass: process.env.GOOGLE_APP_PASSWORD,
     },
+    // Fix for Render/IPv6 issues
+    family: 4,
 });
 
 const sendVerificationMail = async (name, email, otp) => {
