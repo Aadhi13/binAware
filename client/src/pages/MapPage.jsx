@@ -545,9 +545,9 @@ function MapPage() {
       </div>
 
       {/* Legend */}
-      <div className="absolute bottom-2 left-2 z-[999] rounded-lg bg-white/95 px-2 py-1.5 shadow-md">
+      <div className="absolute bottom-2 left-2 right-12 z-[999] rounded-lg bg-white/95 px-2 py-1.5 shadow-md max-w-full overflow-x-auto">
         {showHeatmap ? (
-          <div className="flex items-center gap-2 text-xs">
+          <div className="flex items-center gap-2 text-xs whitespace-nowrap">
             <span className="font-medium text-slate-600">Intensity:</span>
             <div className="flex items-center gap-1">
               <div
@@ -560,15 +560,15 @@ function MapPage() {
             <span className="text-slate-500">Low → High</span>
           </div>
         ) : (
-          <div className="flex flex-wrap gap-3 text-xs">
+          <div className="flex flex-wrap gap-y-1 gap-x-3 text-xs">
             {/* Report legend */}
             {(showLayer === 'all' || showLayer === 'reports') && Object.entries(reportColors).map(([type, color]) => (
               <div key={type} className="flex items-center gap-1">
                 <span
-                  className="h-2 w-2 rounded-full"
+                  className="h-2 w-2 rounded-full flex-shrink-0"
                   style={{ backgroundColor: color }}
                 ></span>
-                <span className="hidden text-slate-600 sm:inline">
+                <span className="text-slate-600">
                   {reportTypeLabels[type].split(' ')[0]}
                 </span>
               </div>
@@ -576,8 +576,8 @@ function MapPage() {
             {/* Bin legend */}
             {(showLayer === 'all' || showLayer === 'bins') && (
               <div className="flex items-center gap-1 border-l border-slate-200 pl-2">
-                <span className="h-2 w-2 rounded-sm bg-green-500"></span>
-                <span className="hidden text-slate-600 sm:inline">Bins</span>
+                <span className="h-2 w-2 rounded-sm bg-green-500 flex-shrink-0"></span>
+                <span className="text-slate-600">Bins</span>
               </div>
             )}
           </div>
